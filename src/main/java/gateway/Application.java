@@ -25,7 +25,7 @@ public class Application {
     public RouteLocator myRoutes(RouteLocatorBuilder builder, UriConfiguration uriConfiguration, ApplicationContext applicationContext) {
 
         RouteLocatorBuilder.Builder routes = builder.routes();
-        addGatewayFilters(routes, applicationContext);
+        addFilters(routes, applicationContext);
 
         String httpUri = uriConfiguration.getHttpbin();
         return routes
@@ -43,7 +43,7 @@ public class Application {
                 .build();
     }
 
-    private void addGatewayFilters(RouteLocatorBuilder.Builder routes, ApplicationContext applicationContext) {
+    private void addFilters(RouteLocatorBuilder.Builder routes, ApplicationContext applicationContext) {
         for (Object bean : applicationContext.getBeansWithAnnotation(GatewayFilter.class).values()) {
             FilterBase filter = (FilterBase) bean;
             routes.route(filter::getRouteBuildable);
