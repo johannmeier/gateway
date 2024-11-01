@@ -1,6 +1,6 @@
 package gateway;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.RequestMapping;
 import reactor.core.publisher.Mono;
 
@@ -22,18 +22,13 @@ public class Application {
     }
 
     @Bean
-    public RouteLocator myRoutes(RouteLocatorBuilder builder, UriConfiguration uriConfiguration) {
+    public RouteLocator myRoutes(RouteLocatorBuilder builder, UriConfiguration uriConfiguration, ApplicationContext applicationContext) {
+
+        RouteLocatorBuilder.Builder routes = builder.routes();
+        addGatewayFilters(routes, applicationContext);
+
         String httpUri = uriConfiguration.getHttpbin();
-        return builder.routes()
-                .route(p -> p
-                        .path("/get")
-                        .filters(f -> f.addRequestHeader("Hello", "World")
-                                .modifyResponseBody(JsonNode.class, JsonNode.class, (exchange, s) -> {
-                                    System.out.println(s);
-                                    return Mono.just(s);
-                                })
-                        )
-                        .uri(httpUri))
+        return routes
                 .route(p -> p
                         .host("*.circuitbreaker.com")
                         .filters(f -> f
@@ -46,6 +41,13 @@ public class Application {
                         .filters(f -> f.addRequestHeader("Holla", "secret"))
                         .uri(httpUri))
                 .build();
+    }
+
+    private void addGatewayFilters(RouteLocatorBuilder.Builder routes, ApplicationContext applicationContext) {
+        for (Object bean : applicationContext.getBeansWithAnnotation(GatewayFilter.class).values()) {
+            FilterBase filter = (FilterBase) bean;
+            routes.route(filter::getRouteBuildable);
+        }
     }
 
     @RequestMapping("/fallback")

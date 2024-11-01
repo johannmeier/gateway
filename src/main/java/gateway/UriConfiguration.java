@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("uri")
 public class UriConfiguration {
 
-    private String httpbin = "http://httpbin.org:80";
+    private String httpbin = "https://httpbin.org";
 
     public String getHttpbin() {
         return httpbin;
